@@ -11,10 +11,10 @@ FILE *failFile = NULL;
 vector<DWORD> assembleIns(string s);
 DWORD strToDWORD(string s);
 
-extern int gl_dumpBIN;
-extern int gl_dumpRAW;
-extern int gl_dumpASM;
-extern bool gl_DXIL_if;
+extern bool gl_dumpBIN;
+extern bool gl_dumpASM;
+extern bool gl_Type;
+extern bool gl_DepthZ;
 
 HMODULE dxc_module = 0;
 HMODULE dxil_module = 0;
@@ -239,11 +239,21 @@ vector<UINT8> convertSM2(vector<UINT8> asmFile) {
 			pos = reg.find("sincos", pos + 1);
 	}
 
-	size_t vsPos = reg.find("vs_2_0");
-	reg = reg.substr(0, vsPos) + "vs_3_0" + reg.substr(vsPos + 6);
+	size_t vsPos = reg.find("vs_2");
+	if (vsPos != string::npos)
+		reg = reg.substr(0, vsPos) + "vs_3_0" + reg.substr(vsPos + 6);
 
-	size_t psPos = reg.find("ps_2_0");
-	reg = reg.substr(0, psPos) + "ps_3_0" + reg.substr(psPos + 6);
+	size_t psPos = reg.find("ps_2");
+	if (psPos != string::npos)
+		reg = reg.substr(0, psPos) + "ps_3_0" + reg.substr(psPos + 6);
+
+	vsPos = reg.find("vs_1");
+	if (vsPos != string::npos)
+		reg = reg.substr(0, vsPos) + "vs_3_0" + reg.substr(vsPos + 6);
+
+	psPos = reg.find("ps_1");
+	if (psPos != string::npos)
+		reg = reg.substr(0, psPos) + "ps_3_0" + reg.substr(psPos + 6);
 
 	size_t dcl_pos = reg.rfind("dcl_");
 	dcl_pos = reg.find("\n", dcl_pos) + 1;
@@ -259,8 +269,10 @@ vector<UINT8> asmShader(bool dx9, const void* pData, size_t length) {
 		D3DXDisassembleShader((const DWORD*)v.data(), FALSE, NULL, &pDisassembly);
 		auto ASM = readV(pDisassembly->GetBufferPointer(), pDisassembly->GetBufferSize());
 		string reg((char*)ASM.data());
-		if (reg.find("VS_2") != string::npos ||
-			reg.find("PS_2") != string::npos) {
+		if (reg.find("vs_2") != string::npos ||
+			reg.find("ps_2") != string::npos ||
+			reg.find("vs_1") != string::npos ||
+			reg.find("ps_1") != string::npos) {
 			return convertSM2(ASM);
 		}
 		else {
@@ -476,7 +488,6 @@ vector<UINT8> changeDXIL(vector<UINT8> ASM, bool left, float conv, float screenS
 		// Go through the wilderness
 		vector<string> shader;
 		vector<string> shaderS;
-		bool bSmall = !gl_DXIL_if;
 		size_t sizeGap = 0;
 		size_t rowGap = 0;
 
@@ -491,8 +502,11 @@ vector<UINT8> changeDXIL(vector<UINT8> ASM, bool left, float conv, float screenS
 		sprintf_s(buf, 80, "0x%016llX", *pConv);
 		string convS(buf);
 
-		if (bSmall) {
-			shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sW + ", " + convS);
+		if (gl_Type) {
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sZ + ", " + convS);
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sW + ", " + convS);
 			shaderS.push_back("  %" + to_string(lastValue + 2) + " = fmul fast float %" + to_string(lastValue + 1) + ", " + sepS);
 			shaderS.push_back("  %" + to_string(lastValue + 3) + " = fadd fast float " + sX + ", %" + to_string(lastValue + 2));
 			sizeGap = 3;
@@ -514,11 +528,17 @@ vector<UINT8> changeDXIL(vector<UINT8> ASM, bool left, float conv, float screenS
 			}
 
 			shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sX + ", 0.000000e+00");
-			shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sW + ", 1.000000e+00");
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sZ + ", 1.000000e+00");
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sW + ", 1.000000e+00");
 			shaderS.push_back("  br i1 %" + to_string(lastValue + 2) + ", label %" + to_string(lastValue + 3) + ", label %" + to_string(lastValue + 7));
 			shaderS.push_back("");
 			shaderS.push_back("; <label>:" + to_string(lastValue + 3));
-			shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sW + ", " + convS);
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sZ + ", " + convS);
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sW + ", " + convS);
 			shaderS.push_back("  %" + to_string(lastValue + 5) + " = fmul fast float %" + to_string(lastValue + 4) + ", " + sepS);
 			shaderS.push_back("  %" + to_string(lastValue + 6) + " = fadd fast float " + sX + ", %" + to_string(lastValue + 5));
 			shaderS.push_back("  br label %" + to_string(lastValue + 7));
@@ -648,11 +668,25 @@ vector<UINT8> changeASM9(vector<UINT8> ASM, bool left, float conv, float screenS
 				string sourceReg = "r" + to_string(tempReg);
 				string calcReg = "r" + to_string(tempReg + 1);
 
-				shader +=
-					"    if_ne " + sourceReg + ".w, c250.z\n" +
-					"      add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n" +
-					"      mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n" +
-					"    endif\n";
+				if (gl_Type) {
+						if (gl_DepthZ)
+							shader += "      add " + calcReg + ".x, " + sourceReg + ".z, c250.x\n";
+						else
+							shader += "      add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n";
+						shader += "      mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n";
+				}
+				else {
+					if (gl_DepthZ)
+						shader += "    if_ne " + sourceReg + ".z, c250.z\n";
+					else
+						shader += "    if_ne " + sourceReg + ".w, c250.z\n";
+					if (gl_DepthZ)
+						shader += "      add " + calcReg + ".x, " + sourceReg + ".z, c250.x\n";
+					else
+						shader += "      add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n";
+					shader += "      mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n";
+					shader += "    endif\n";
+				}
 			}
 		}
 		else {
@@ -737,16 +771,26 @@ vector<UINT8> changeASM(bool dx9, vector<UINT8> ASM, bool left, float conv, floa
 				string sourceReg = "r" + to_string(temp - 1);
 				string calcReg = "r" + to_string(temp - 2);
 
-				shader +=
-				/*
-				"add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n" +
-				"mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n";
-				*/
-				"ne " + calcReg + ".x, " + sourceReg + ".w, l(1.000000)\n" +
-				"if_nz " + calcReg + ".x\n"
-				"  add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n" +
-				"  mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n" +
-				"endif\n";
+				if (gl_Type) {
+					if (gl_DepthZ)
+						shader += "add " + calcReg + ".x, " + sourceReg + ".z, l(" + conv + ")\n";
+					else
+						shader += "add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n";
+					shader += "mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n";
+				}
+				else {
+					if (gl_DepthZ)
+						shader += "ne " + calcReg + ".x, " + sourceReg + ".z, l(1.000000)\n";
+					else
+						shader += "ne " + calcReg + ".x, " + sourceReg + ".w, l(1.000000)\n";
+					shader += "if_nz " + calcReg + ".x\n";
+					if (gl_DepthZ)
+						shader += "  add " + calcReg + ".x, " + sourceReg + ".z, l(" + conv + ")\n";
+					else
+						shader += "  add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n";
+					shader += "  mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n";
+					shader += "endif\n";
+				}
 			}
 			if (oReg.size() == 0) {
 				// no output
@@ -1078,7 +1122,7 @@ vector<UINT8> disassembler(vector<UINT8> buffer) {
 	}
 	else {
 		if (dxc_module == 0)
-			dxc_module = ::LoadLibrary(L"dxcompiler.dll");
+			dxc_module = ::LoadLibrary(L"dxcompiler2.dll");
 		if (dxc_module != 0) {
 			DxcCreateInstanceProc dxc_create_func = (DxcCreateInstanceProc)GetProcAddress(dxc_module, "DxcCreateInstance");
 			ComPtr<IDxcCompiler3> pCompiler;
@@ -3317,7 +3361,7 @@ vector<UINT8> assembler(bool dx9, vector<UINT8> asmFile, vector<UINT8> buffer) {
 		return ret;
 	if (asmFile[0] == ';') {
 		if (dxc_module == 0)
-			dxc_module = ::LoadLibrary(L"dxcompiler.dll");
+			dxc_module = ::LoadLibrary(L"dxcompiler2.dll");
 		if (dxc_module != 0) {
 			DxcCreateInstanceProc dxc_create_func = (DxcCreateInstanceProc)GetProcAddress(dxc_module, "DxcCreateInstance");
 			ComPtr<IDxcUtils> pUtils;
@@ -3338,7 +3382,7 @@ vector<UINT8> assembler(bool dx9, vector<UINT8> asmFile, vector<UINT8> buffer) {
 					ret.push_back(pASM[i]);
 				}
 				if (dxil_module == 0)
-					dxil_module = ::LoadLibrary(L"dxil.dll");
+					dxil_module = ::LoadLibrary(L"dxil2.dll");
 				if (dxil_module != 0) {
 					DxcCreateInstanceProc dxil_create_func = (DxcCreateInstanceProc)GetProcAddress(dxil_module, "DxcCreateInstance");
 					ComPtr<IDxcLibrary> library;

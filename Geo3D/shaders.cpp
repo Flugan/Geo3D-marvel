@@ -7,14 +7,14 @@
 
 CRITICAL_SECTION gl_CS;
 
-int gl_dumpBIN = false;
-int gl_dumpRAW = false;
-int gl_dumpASM = false;
+bool gl_dumpBIN = false;
+bool gl_dumpASM = false;
+bool gl_Type = false;
 float gl_separation = 0.1f;
 float gl_screenSize = 55;
 float gl_conv = 1.0;
 bool gl_left = false;
-bool gl_DXIL_if = false;
+bool gl_DepthZ = false;
 std::filesystem::path dump_path;
 
 vector<string> enumerateFiles(string pathName, string filter = "") {
