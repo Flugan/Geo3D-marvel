@@ -385,7 +385,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 			pso->vs->code_size = pso->vsCode.code_size;
 		}
 	}
-	/*
+	
 	if (pso->dsCode.code_size > 0) {
 		dsV = readV(pso->dsCode.code, pso->dsCode.code_size);
 		ASM = disassembler(dsV);
@@ -413,7 +413,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 			pso->gs->code_size = pso->gsCode.code_size;
 		}
 	}
-	*/
+	
 	if (pso->psEdit.size() > 0) {
 		psV = readV(pso->psCode.code, pso->psCode.code_size);
 		ASM = pso->psEdit;
@@ -440,7 +440,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		cVS_L = assembler(dx9, VS_L, vsV);
 		cVS_R = assembler(dx9, VS_R, vsV);
 	}
-	/*
 	if (DS_L.size() > 0 && DS_R.size()) {
 		cDS_L = assembler(dx9, DS_L, dsV);
 		cDS_R = assembler(dx9, DS_R, dsV);
@@ -449,7 +448,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		cGS_L = assembler(dx9, GS_L, gsV);
 		cGS_R = assembler(dx9, GS_R, gsV);
 	}
-	*/
 	if (PS_L.size() > 0 && PS_R.size()) {
 		cPS_L = assembler(dx9, PS_L, psV);
 		cPS_R = assembler(dx9, PS_R, psV);
@@ -463,7 +461,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		pso->vs->code = cVS_L.data();
 		pso->vs->code_size = cVS_L.size();
 	}
-	/*
 	if (cDS_L.size() > 0) {
 		pso->ds->code = cDS_L.data();
 		pso->ds->code_size = cDS_L.size();
@@ -472,7 +469,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		pso->gs->code = cGS_L.data();
 		pso->gs->code_size = cGS_L.size();
 	}
-	*/
 	if (cPS_L.size() > 0) {
 		pso->ps->code = cPS_L.data();
 		pso->ps->code_size = cPS_L.size();
@@ -480,18 +476,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 	if (cCS_L.size() > 0) {
 		pso->cs->code = cCS_L.data();
 		pso->cs->code_size = cCS_L.size();
-	}
-
-	if (gl_quickLoad) {
-		char sPath[MAX_PATH];
-		if (pso->crcVS) {
-			sprintf_s(sPath, MAX_PATH, "%08lX-vs.skip", pso->crcVS);
-			reshade::log::message(reshade::log::level::info, sPath);
-		}
-		if (pso->crcCS) {
-			sprintf_s(sPath, MAX_PATH, "%08lX-cs.skip", pso->crcCS);
-			reshade::log::message(reshade::log::level::info, sPath);
-		}
 	}
 
 	reshade::api::pipeline pipeL;
@@ -509,7 +493,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		pso->vs->code = cVS_R.data();
 		pso->vs->code_size = cVS_R.size();
 	}
-	/*
 	if (cDS_R.size() > 0) {
 		pso->ds->code = cDS_R.data();
 		pso->ds->code_size = cDS_R.size();
@@ -518,7 +501,6 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		pso->gs->code = cGS_R.data();
 		pso->gs->code_size = cGS_R.size();
 	}
-	*/
 	if (cPS_R.size() > 0) {
 		pso->ps->code = cPS_R.data();
 		pso->ps->code_size = cPS_R.size();
@@ -542,11 +524,9 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 
 static void onInitPipeline(device* device, pipeline_layout layout, uint32_t subobject_count, const pipeline_subobject* subobjects, pipeline pipeline)
 {
-	/*
 	if (PSOmap.count(pipeline.handle) == 1) {
 		return;
 	}
-	*/
 
 	bool dx9 = device->get_api() == device_api::d3d9;
 	
@@ -585,10 +565,8 @@ static void onInitPipeline(device* device, pipeline_layout layout, uint32_t subo
 	pso->crcCS = 0;
 
 	pso->cs = nullptr;
-	/*
 	pso->ds = nullptr;
 	pso->gs = nullptr;
-	*/
 	pso->ps = nullptr;
 	pso->cs = nullptr;
 
@@ -704,6 +682,10 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 			if (pso->crcPS != 0) pixelShaders[pso->crcPS] = fade;
 			if (pso->crcVS != 0) vertexShaders[pso->crcVS] = fade;
 			if (pso->crcCS != 0) computeShaders[pso->crcCS] = fade;
+
+			if (currentPS != 0) pixelShaders[currentVS] = 1;
+			if (currentVS != 0) vertexShaders[currentVS] = 1;
+			if (currentCS != 0) computeShaders[currentCS] = 1;
 		}
 
 		if (gl_2D)
@@ -717,9 +699,9 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 		if (pso->convergence != gl_conv || pso->separation != gl_separation) {
 			pso->convergence = gl_conv;
 			pso->separation = gl_separation;
-			if (gl_quickLoad) m.lock();
+			//if (gl_quickLoad) m.lock();
 			updatePipeline(cmd_list->get_device(), pso);
-			if (gl_quickLoad) m.unlock();
+			//if (gl_quickLoad) m.unlock();
 		}
 		
 		if (cmd_list->get_device()->get_api() == device_api::d3d12) {
@@ -742,10 +724,8 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 		}
 		
 		if ((stage & pipeline_stage::vertex_shader) != 0 ||
-			/*
 			(stage & pipeline_stage::domain_shader) != 0 ||
 			(stage & pipeline_stage::geometry_shader) != 0 ||
-			*/
 			(stage & pipeline_stage::pixel_shader) != 0 ||
 			(stage & pipeline_stage::compute_shader) != 0) {
 			if (pso->Left.handle != 0) {
@@ -761,7 +741,6 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 }
 
 static void onReshadePresent(effect_runtime* runtime)
-//static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_list, resource_view rtv, resource_view rtv_srgb)
 {
 	gl_left = !gl_left;
 	
@@ -1075,13 +1054,11 @@ static void onReshadePresent(effect_runtime* runtime)
 
 	if (runtime->is_key_down(VK_CONTROL)) {
 		if (runtime->is_key_pressed(VK_F1)) {
-			/*
 			for (auto it = PSOmap.begin(); it != PSOmap.end(); ++it) {
 				PSO* pso = it->second;
 				if (pso->convergence == 0)
 					updatePipeline(runtime->get_device(), pso);
 			}
-			*/
 		}
 		if (runtime->is_key_pressed(VK_F2)) {
 			gl_2D = !gl_2D;
@@ -1263,130 +1240,6 @@ static void onResetCommandList(command_list* commandList)
 	commandListData.CS = 0;
 }
 
-static void onDestroyPipeline(device* device, reshade::api::pipeline pipelineHandle)
-{
-	/*
-	if (PSOmap.count(pipelineHandle.handle) == 1) {
-		PSO* pso = PSOmap[pipelineHandle.handle];
-		for (uint32_t i = 0; i < pso->objects.size(); ++i)
-		{
-			auto so = pso->objects[i];
-			switch (so.type)
-			{
-			case pipeline_subobject_type::vertex_shader:
-			case pipeline_subobject_type::hull_shader:
-			case pipeline_subobject_type::domain_shader:
-			case pipeline_subobject_type::geometry_shader:
-			case pipeline_subobject_type::pixel_shader:
-			case pipeline_subobject_type::compute_shader:
-			{
-				const auto shader = static_cast<const shader_desc*>(so.data);
-
-				if (shader != nullptr) {
-					delete shader->code;
-					if (shader->entry_point != nullptr)
-						delete shader->entry_point;
-					if (shader->spec_constants > 0) {
-						delete shader->spec_constant_ids;
-						delete shader->spec_constant_values;
-					}
-					delete shader;
-				}
-				break;
-			}
-			case pipeline_subobject_type::input_layout:
-			{
-				const auto input_layout = static_cast<const input_element*>(so.data);
-				for (uint32_t k = 0; k < so.count; ++k)
-				{
-					delete input_layout[k].semantic;
-				}
-				delete input_layout;
-				break;
-			}
-			case pipeline_subobject_type::blend_state:
-			{
-				const auto blend_state = static_cast<const blend_desc*>(so.data);
-				delete blend_state;
-				break;
-			}
-			case pipeline_subobject_type::rasterizer_state:
-			{
-				const auto rasterizer_state = static_cast<const rasterizer_desc*>(so.data);
-				delete rasterizer_state;
-				break;
-			}
-			case pipeline_subobject_type::depth_stencil_state:
-			{
-				const auto depth_stencil_state = static_cast<const depth_stencil_desc*>(so.data);
-				delete depth_stencil_state;
-				break;
-			}
-			case pipeline_subobject_type::stream_output_state:
-			{
-				const auto stream_output_state = static_cast<const stream_output_desc*>(so.data);
-				delete stream_output_state;
-				break;
-			}
-			case pipeline_subobject_type::primitive_topology:
-			{
-				const auto topology = static_cast<const primitive_topology*>(so.data);
-				delete topology;
-				break;
-			}
-			case pipeline_subobject_type::depth_stencil_format:
-			{
-				const auto depth_stencil_format = static_cast<const format*>(so.data);
-				delete depth_stencil_format;
-				break;
-			}
-			case pipeline_subobject_type::render_target_formats:
-			{
-				const auto render_target_formats = static_cast<const format*>(so.data);
-				delete render_target_formats;
-				break;
-			}
-			case pipeline_subobject_type::sample_mask:
-			{
-				const auto sample_mask = static_cast<const uint32_t*>(so.data);
-				delete sample_mask;
-				break;
-			}
-			case pipeline_subobject_type::sample_count:
-			{
-				const auto sample_count = static_cast<const uint32_t*>(so.data);
-				delete sample_count;
-				break;
-			}
-			case pipeline_subobject_type::viewport_count:
-			{
-				const auto viewport_count = static_cast<const uint32_t*>(so.data);
-				delete viewport_count;
-				break;
-			}
-			case pipeline_subobject_type::dynamic_pipeline_states:
-			{
-				const auto dynamic_pipeline_states = static_cast<const dynamic_state*>(so.data);
-				delete dynamic_pipeline_states;
-				break;
-			}
-			}
-		}
-		
-		auto left = (IUnknown*)pso->Left.handle;
-		if (left != nullptr)
-			left->Release();
-
-		auto right = (IUnknown*)pso->Right.handle;
-		if (right != nullptr)
-			right->Release();
-		
-		delete pso;
-	}
-	*/
-	PSOmap.erase(pipelineHandle.handle);
-}
-
 bool blockDrawCallForCommandList(command_list* commandList)
 {
 	if (nullptr == commandList)
@@ -1442,7 +1295,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID)
 		reshade::register_event<reshade::addon_event::bind_pipeline>(onBindPipeline);
 		reshade::register_event<reshade::addon_event::reshade_overlay>(onReshadeOverlay);
 		reshade::register_event<reshade::addon_event::reshade_present>(onReshadePresent);
-		//reshade::register_event<reshade::addon_event::reshade_begin_effects>(onReshadeBeginEffects);
 		
 		reshade::register_event<reshade::addon_event::draw>(onDraw);
 		reshade::register_event<reshade::addon_event::draw_indexed>(onDrawIndexed);
@@ -1451,7 +1303,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID)
 		reshade::register_event<reshade::addon_event::init_command_list>(onInitCommandList);
 		reshade::register_event<reshade::addon_event::destroy_command_list>(onDestroyCommandList);
 		reshade::register_event<reshade::addon_event::reset_command_list>(onResetCommandList);
-		//reshade::register_event<reshade::addon_event::destroy_pipeline>(onDestroyPipeline);
 		break;
 	case DLL_PROCESS_DETACH:
 		reshade::unregister_addon(hModule);
