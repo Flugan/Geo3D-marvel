@@ -611,23 +611,23 @@ static void onInitPipeline(device* device, pipeline_layout layout, uint32_t subo
 		return;
 
 	wchar_t sPath[MAX_PATH];
-	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skip", pso->crcVS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.2D", pso->crcVS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->skip = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skip", pso->crcPS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.2D", pso->crcPS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->skip = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skip", pso->crcCS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.2D", pso->crcCS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->skip = true;
 
-	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso->crcVS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso->crcVS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->noDraw = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso->crcPS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso->crcPS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->noDraw = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso->crcCS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso->crcCS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso->noDraw = true;
 	
@@ -776,23 +776,23 @@ static void onReshadePresent(effect_runtime* runtime)
 			pso->noDraw = false;
 
 			wchar_t sPath[MAX_PATH];
-			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skip", pso->crcVS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.2D", pso->crcVS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->skip = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skip", pso->crcPS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.2D", pso->crcPS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->skip = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skip", pso->crcCS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.2D", pso->crcCS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->skip = true;
 
-			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso->crcVS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso->crcVS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso->crcPS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso->crcPS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso->crcCS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso->crcCS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
 
@@ -865,7 +865,7 @@ static void onReshadePresent(effect_runtime* runtime)
 				if (pixelShaders.count(pso->crcPS) == 1) {
 					filesystem::path fix_path_dump = fix_path / L"Dump";
 					filesystem::create_directories(fix_path_dump);
-					swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skip", pso->crcPS);
+					swprintf_s(sPath, MAX_PATH, L"%08lX-ps.2D", pso->crcPS);
 					filesystem::path file = fix_path_dump / sPath;
 					_wfopen_s(&f, file.c_str(), L"wb");
 					if (f != 0) {
@@ -884,7 +884,7 @@ static void onReshadePresent(effect_runtime* runtime)
 				if (vertexShaders.count(pso->crcVS) == 1) {
 					filesystem::path fix_path_dump = fix_path / L"Dump";
 					filesystem::create_directories(fix_path_dump);
-					swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skip", pso->crcVS);
+					swprintf_s(sPath, MAX_PATH, L"%08lX-vs.2D", pso->crcVS);
 					filesystem::path file = fix_path_dump / sPath;
 					_wfopen_s(&f, file.c_str(), L"wb");
 					if (f != 0) {
@@ -932,11 +932,11 @@ static void onReshadePresent(effect_runtime* runtime)
 					filesystem::create_directories(fix_path);
 					if (huntUsing2D) {
 						pso->skip = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skip", pso->crcPS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-ps.2D", pso->crcPS);
 					}
 					else {
 						pso->noDraw = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso->crcPS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso->crcPS);
 					}
 					file = fix_path / sPath;
 					_wfopen_s(&f, file.c_str(), L"wb");
@@ -982,11 +982,11 @@ static void onReshadePresent(effect_runtime* runtime)
 					filesystem::create_directories(fix_path);
 					if (huntUsing2D) {
 						pso->skip = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skip", pso->crcVS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-vs.2D", pso->crcVS);
 					}
 					else {
 						pso->noDraw = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso->crcVS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso->crcVS);
 					}
 					file = fix_path / sPath;
 					_wfopen_s(&f, file.c_str(), L"wb");
@@ -1032,11 +1032,11 @@ static void onReshadePresent(effect_runtime* runtime)
 					filesystem::create_directories(fix_path);
 					if (huntUsing2D) {
 						pso->skip = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skip", pso->crcCS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-cs.2D", pso->crcCS);
 					}
 					else {
 						pso->noDraw = true;
-						swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso->crcCS);
+						swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso->crcCS);
 					}
 					file = fix_path / sPath;
 					_wfopen_s(&f, file.c_str(), L"wb");
