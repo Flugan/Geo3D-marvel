@@ -8,8 +8,8 @@
 bool gl_left = false;
 
 float gl_conv = 1.0f;
-float gl_screenSize = 27.6f;
-float gl_separation = 14.0f;
+float gl_screenSize = 27.0f;
+float gl_separation = 15.0f;
 bool gl_dumpBIN = false;
 bool gl_dumpOnly = false;
 bool gl_dumpASM = false;
@@ -699,9 +699,7 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 		if (pso->convergence != gl_conv || pso->separation != gl_separation) {
 			pso->convergence = gl_conv;
 			pso->separation = gl_separation;
-			//if (gl_quickLoad) m.lock();
 			updatePipeline(cmd_list->get_device(), pso);
-			//if (gl_quickLoad) m.unlock();
 		}
 		
 		if (cmd_list->get_device()->get_api() == device_api::d3d12) {
@@ -1176,10 +1174,10 @@ static void onReshadeOverlay(reshade::api::effect_runtime* runtime)
 			return;
 		}
 
-		ImGui::Text("Geo3D: %s Type: %s", gl_2D ? "2D mode" : "3D mode", gl_Type ? "1" : "0");
+		ImGui::Text("Geo3D: %s Type: %s %s", gl_2D ? "2D mode" : "3D mode", gl_Type ? "1" : "0", gl_DepthZ ? "Z" : "");
 		ImGui::Text("Screensizen %.1f", gl_screenSize);
 		ImGui::Text("Separation %.0f", gl_separation);
-		ImGui::Text("Convergence %.2f", gl_conv);
+		ImGui::Text("Convergence %.3f", gl_conv);
 
 		size_t maxPS = pixelShaders.size();
 		size_t selectedPS = 0;
