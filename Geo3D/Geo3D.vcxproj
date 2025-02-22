@@ -158,6 +158,7 @@
     <ClInclude Include="crc32_hash.hpp" />
     <ClInclude Include="dll_assembler.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="StorePipeline.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Geo3D.rc" />
