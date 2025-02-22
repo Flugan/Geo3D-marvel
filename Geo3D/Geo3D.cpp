@@ -669,6 +669,7 @@ uint32_t currentVS = 0;
 uint32_t currentPS = 0;
 uint32_t currentCS = 0;
 bool huntUsing2D = true;
+PSO* pso2 = nullptr;
 
 static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade::api::pipeline pipeline)
 {
@@ -691,15 +692,29 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 		if (gl_2D)
 			return;
 
-		if (pso->skip)
-			return;
-		if (pso->noDraw)
-			commandListData.skip = true;
-
 		if (pso->convergence != gl_conv || pso->separation != gl_separation) {
 			pso->convergence = gl_conv;
 			pso->separation = gl_separation;
 			updatePipeline(cmd_list->get_device(), pso);
+		}
+
+		if (cmd_list->get_device()->get_api() == device_api::d3d12) {
+			if (pso->skip)
+				return;
+			if (pso->noDraw)
+				commandListData.skip = true;
+		}
+		else {
+			if (pso->skip || pso->noDraw)
+				pso2 = pso;
+			else if (pso->crcVS)
+				pso2 = nullptr;
+			if (pso2 != nullptr) {
+				if (pso2->skip)
+					return;
+				if (pso2->noDraw)
+					commandListData.skip = true;
+			}
 		}
 		
 		if (cmd_list->get_device()->get_api() == device_api::d3d12) {
