@@ -10,15 +10,16 @@ bool gl_left = false;
 float gl_conv = 1.0f;
 float gl_minConv = 0.0f;
 float gl_screenSize = 27.0f;
-uint8_t gl_separation = 14;
+uint8_t gl_separation = 15;
 
 bool gl_dumpBIN = false;
 bool gl_dumpOnly = false;
 bool gl_dumpASM = false;
 
 bool gl_2D = false;
-bool gl_quickLoad = true;
-bool gl_DXILfix = false;
+bool gl_quickLoad = false;
+bool gl_Type = false;
+bool gl_DepthZ = false;
 
 std::filesystem::path dump_path;
 std::filesystem::path fix_path;
@@ -1227,6 +1228,16 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 				gl_conv *= 1.25f;
 				reshade::set_config_value(nullptr, "Geo3D", "StereoConvergence", gl_conv);
 			}
+			if (runtime->is_key_pressed(VK_F7)) {
+				gl_Type = !gl_Type;
+				gl_conv = 0;
+				reshade::set_config_value(nullptr, "Geo3D", "Type", gl_Type);
+			}
+			if (runtime->is_key_pressed(VK_F8)) {
+				gl_DepthZ = !gl_DepthZ;
+				gl_conv = 0;
+				reshade::set_config_value(nullptr, "Geo3D", "DepthZ", gl_DepthZ);
+			}
 		}
 	}
 }
@@ -1238,7 +1249,8 @@ static void load_config()
 	reshade::get_config_value(nullptr, "Geo3D", "DumpASM", gl_dumpASM);
 
 	reshade::get_config_value(nullptr, "Geo3D", "QuickLoad", gl_quickLoad);
-	reshade::get_config_value(nullptr, "Geo3D", "DXILfix", gl_DXILfix);
+	reshade::get_config_value(nullptr, "Geo3D", "Type", gl_Type);
+	reshade::get_config_value(nullptr, "Geo3D", "DepthZ", gl_DepthZ);
 	
 	reshade::get_config_value(nullptr, "Geo3D", "StereoConvergence", gl_conv);
 	reshade::get_config_value(nullptr, "Geo3D", "StereoMinConvergence", gl_minConv);
@@ -1250,8 +1262,8 @@ static void load_config()
 		gl_separation = 100;
 		reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
 	}
-	if (gl_separation < 1) {
-		gl_separation = 1;
+	if (gl_separation < 0) {
+		gl_separation = 0;
 		reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
 	}
 	bool debug = false;

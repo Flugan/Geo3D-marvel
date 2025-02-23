@@ -13,7 +13,8 @@ uint8_t gl_separation = 14;
 float gl_screenSize = 27;
 float gl_conv = 1.0;
 float gl_minConv = 0.0f;
-bool gl_DXILfix = false;
+bool gl_Type = false;
+bool gl_DepthZ = false;
 bool gl_left = false;
 std::filesystem::path dump_path;
 

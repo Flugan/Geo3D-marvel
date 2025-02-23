@@ -19,7 +19,8 @@ extern uint8_t gl_separation;
 extern bool gl_dumpBIN;
 extern bool gl_dumpASM;
 
-extern bool gl_DXILfix;
+extern bool gl_Type;
+extern bool gl_DepthZ;
 
 HMODULE dxc_module = 0;
 HMODULE dxil_module = 0;
@@ -485,8 +486,11 @@ vector<UINT8> changeDXIL(vector<UINT8> ASM, bool left) {
 		sprintf_s(buf, 80, "0x%016llX", *pConv);
 		string convS(buf);
 		
-		if (gl_DXILfix) {
-			shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sW + ", " + convS);
+		if (gl_Type) {
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sZ + ", " + convS);
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sW + ", " + convS);
 			shaderS.push_back("  %" + to_string(lastValue + 2) + " = fmul fast float %" + to_string(lastValue + 1) + ", " + sepS);
 			shaderS.push_back("  %" + to_string(lastValue + 3) + " = fadd fast float " + sX + ", %" + to_string(lastValue + 2));
 			sizeGap = 3;
@@ -508,11 +512,17 @@ vector<UINT8> changeDXIL(vector<UINT8> ASM, bool left) {
 			}
 
 			shaderS.push_back("  %" + to_string(lastValue + 1) + " = fadd fast float " + sX + ", 0.000000e+00");
-			shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sW + ", 1.000000e+00");
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sZ + ", 1.000000e+00");
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 2) + " = fcmp fast une float " + sW + ", 1.000000e+00");
 			shaderS.push_back("  br i1 %" + to_string(lastValue + 2) + ", label %" + to_string(lastValue + 3) + ", label %" + to_string(lastValue + 7));
 			shaderS.push_back("");
 			shaderS.push_back("; <label>:" + to_string(lastValue + 3));
-			shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sW + ", " + convS);
+			if (gl_DepthZ)
+				shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sZ + ", " + convS);
+			else
+				shaderS.push_back("  %" + to_string(lastValue + 4) + " = fadd fast float " + sW + ", " + convS);
 			shaderS.push_back("  %" + to_string(lastValue + 5) + " = fmul fast float %" + to_string(lastValue + 4) + ", " + sepS);
 			shaderS.push_back("  %" + to_string(lastValue + 6) + " = fadd fast float " + sX + ", %" + to_string(lastValue + 5));
 			shaderS.push_back("  br label %" + to_string(lastValue + 7));
@@ -643,11 +653,18 @@ vector<UINT8> changeASM9(vector<UINT8> ASM, bool left) {
 				string sourceReg = "r" + to_string(tempReg);
 				string calcReg = "r" + to_string(tempReg + 1);
 
-				shader +=
-					"    if_ne " + sourceReg + ".w, c250.z\n" +
-					"      add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n" +
-					"      mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n" +
-					"    endif\n";
+				if (gl_Type) {
+					shader +=
+						"    add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n" +
+						"    mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n";
+				}
+				else {
+					shader +=
+						"    if_ne " + sourceReg + ".w, c250.z\n" +
+						"      add " + calcReg + ".x, " + sourceReg + ".w, c250.x\n" +
+						"      mad " + oReg + ".x, " + calcReg + ".x, c250.y, " + sourceReg + ".x\n" +
+						"    endif\n";
+				}
 			}
 		}
 		else {
@@ -751,11 +768,18 @@ vector<UINT8> changeASM(bool dx9, vector<UINT8> ASM, bool left) {
 						"endif\n";
 				}
 				else {
-					shader +=
-						"if_ne " + sourceReg + ".w, l(1.000000)\n"
-						"  add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n" +
-						"  mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n" +
-						"endif\n";
+					if (gl_Type) {
+						shader +=
+							"add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n" +
+							"mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n";
+					}
+					else {
+						shader +=
+							"if_ne " + sourceReg + ".w, l(1.000000)\n"
+							"  add " + calcReg + ".x, " + sourceReg + ".w, l(" + conv + ")\n" +
+							"  mad " + oReg + ".x, " + calcReg + ".x, l(" + sep + "), " + sourceReg + ".x\n" +
+							"endif\n";
+					}
 				}
 			}
 			if (oReg.size() == 0) {
