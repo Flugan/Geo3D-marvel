@@ -539,7 +539,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (PS_L.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ps-left.bin", pso->crcPS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ps-left.txt", pso->crcPS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -550,7 +550,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (VS_R.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ps-right.bin", pso->crcPS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ps-right.txt", pso->crcPS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -561,7 +561,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (CS_L.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-cs-left.bin", pso->crcCS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-cs-left.txt", pso->crcCS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -572,7 +572,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (CS_R.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-cs-right.bin", pso->crcCS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-cs-right.txt", pso->crcCS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -583,7 +583,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (DS_L.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ds-left.bin", pso->crcDS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ds-left.txt", pso->crcDS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -594,7 +594,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (DS_R.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ds-right.bin", pso->crcDS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ds-right.txt", pso->crcDS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -605,7 +605,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (GS_L.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-gs-left.bin", pso->crcGS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-gs-left.txt", pso->crcGS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -616,7 +616,7 @@ void updatePipeline(reshade::api::device* device, PSO* pso) {
 		if (GS_R.size() > 0) {
 			filesystem::path file;
 			filesystem::create_directories(dump_path);
-			swprintf_s(sPath, MAX_PATH, L"%08lX-gs-right.bin", pso->crcGS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-gs-right.txt", pso->crcGS);
 			file = dump_path / sPath;
 			_wfopen_s(&f, file.c_str(), L"wb");
 			if (f != 0) {
@@ -776,13 +776,13 @@ static void onInitPipeline(device* device, pipeline_layout layout, uint32_t subo
 	if (pso.skip)
 		return;
 
-	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso.crcVS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso.crcVS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso.noDraw = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso.crcPS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso.crcPS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso.noDraw = true;
-	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso.crcCS);
+	swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso.crcCS);
 	if (fixes.find(fix_path / sPath) != fixes.end())
 		pso.noDraw = true;
 	
@@ -954,13 +954,13 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->skip = true;
 
-			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso->crcVS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso->crcVS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso->crcPS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso->crcPS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
-			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso->crcCS);
+			swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso->crcCS);
 			if (fixes.find(fix_path / sPath) != fixes.end())
 				pso->noDraw = true;
 
@@ -1068,7 +1068,7 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 				}
 				else {
 					pso->noDraw = true;
-					swprintf_s(sPath, MAX_PATH, L"%08lX-ps.dump", pso->crcPS);
+					swprintf_s(sPath, MAX_PATH, L"%08lX-ps.skipdraw", pso->crcPS);
 				}	
 				file = fix_path / sPath;
 				_wfopen_s(&f, file.c_str(), L"wb");
@@ -1119,7 +1119,7 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 				}
 				else {
 					pso->noDraw = true;
-					swprintf_s(sPath, MAX_PATH, L"%08lX-vs.dump", pso->crcVS);
+					swprintf_s(sPath, MAX_PATH, L"%08lX-vs.skipdraw", pso->crcVS);
 				}
 				file = fix_path / sPath;
 				_wfopen_s(&f, file.c_str(), L"wb");
@@ -1170,7 +1170,7 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 				}
 				else {
 					pso->noDraw = true;
-					swprintf_s(sPath, MAX_PATH, L"%08lX-cs.dump", pso->crcCS);
+					swprintf_s(sPath, MAX_PATH, L"%08lX-cs.skipdraw", pso->crcCS);
 				}
 				file = fix_path / sPath;
 				_wfopen_s(&f, file.c_str(), L"wb");
@@ -1189,22 +1189,14 @@ static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_lis
 		}
 
 		if (runtime->is_key_pressed(VK_F3)) {
-			if (gl_separation < 20)
-				gl_separation -= 1;
-			else
-				gl_separation -= 5;
-
-			if (gl_separation < 1)
-				gl_separation = 1;
+			gl_separation -= 5;
+			if (gl_separation < 0)
+				gl_separation = 0;
 			reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
 		}
 
 		if (runtime->is_key_pressed(VK_F4)) {
-			if (gl_separation < 20)
-				gl_separation += 1;
-			else
-				gl_separation += 5;
-
+			gl_separation += 5;
 			if (gl_separation > 100)
 				gl_separation = 100;
 			reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
