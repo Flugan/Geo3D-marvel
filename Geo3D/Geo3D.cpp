@@ -20,6 +20,7 @@ bool gl_2D = false;
 bool gl_quickLoad = false;
 bool gl_Type = false;
 bool gl_DepthZ = false;
+bool gl_present = false;
 
 std::filesystem::path dump_path;
 std::filesystem::path fix_path;
@@ -902,19 +903,24 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 	}
 }
 
+bool gl_runtimeLeft = false;
+
 static void onPresent(command_queue* queue, swapchain* swapchain, const rect* source_rect, const rect* dest_rect, uint32_t dirty_rect_count, const rect* dirty_rects) {
-	gl_left = !gl_left;
+	if (gl_present) {
+		gl_left = !gl_left;
+	}
+	else {
+		gl_left = gl_runtimeLeft;
+	}
 }
 
 static void onReshadeBeginEffects(effect_runtime* runtime, command_list* cmd_list, resource_view rtv, resource_view rtv_srgb)
 {
-	/*
 	auto var = runtime->find_uniform_variable(nullptr, "framecount");
 	unsigned int framecount = 0;
 	runtime->get_uniform_value_uint(var, &framecount, 1);
 	if (framecount > 0)
-		gl_left = (framecount % 2) == 0;
-	*/
+		gl_runtimeLeft = (framecount % 2) == 0;
 
 	if (runtime->is_key_pressed(VK_F8)) {
 		gl_left = !gl_left;
@@ -1251,6 +1257,7 @@ static void load_config()
 	reshade::get_config_value(nullptr, "Geo3D", "QuickLoad", gl_quickLoad);
 	reshade::get_config_value(nullptr, "Geo3D", "Type", gl_Type);
 	reshade::get_config_value(nullptr, "Geo3D", "DepthZ", gl_DepthZ);
+	reshade::get_config_value(nullptr, "Geo3D", "Present", gl_present);
 	
 	reshade::get_config_value(nullptr, "Geo3D", "StereoConvergence", gl_conv);
 	reshade::get_config_value(nullptr, "Geo3D", "StereoMinConvergence", gl_minConv);
