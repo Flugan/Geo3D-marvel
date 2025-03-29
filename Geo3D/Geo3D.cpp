@@ -437,10 +437,12 @@ static void onBindPipeline(command_list* cmd_list, pipeline_stage stage, reshade
 	}
 }
 
+static void onPresent(command_queue* queue, swapchain* swapchain, const rect* source_rect, const rect* dest_rect, uint32_t dirty_rect_count, const rect* dirty_rects) {
+	gl_left = !gl_left;
+}
+
 static void onReshadePresent(effect_runtime* runtime)
 {
-	gl_left = !gl_left;
-	
 	/*
 	auto var = runtime->find_uniform_variable("3DToElse.fx", "framecount");
 	unsigned int framecountElse = 0;
@@ -762,43 +764,15 @@ static void onReshadePresent(effect_runtime* runtime)
 			gl_2D = !gl_2D;
 		}
 		if (runtime->is_key_pressed(VK_F3)) {
-			if (gl_separation == 10)
-				gl_separation = 8;
-			else if (gl_separation == 8)
-				gl_separation = 6;
-			else if (gl_separation == 6)
-				gl_separation = 4;
-			else if (gl_separation == 4)
-				gl_separation = 3;
-			else if (gl_separation == 3)
-				gl_separation = 2;
-			else if (gl_separation == 2)
-				gl_separation = 1;
-			else if (gl_separation == 1)
-				gl_separation = 1;
-			else {
-				gl_separation -= 5;
-			}
+			gl_separation -= 5;
+			if (gl_separation < 0)
+				gl_separation = 0;
 			reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
 		}
 		if (runtime->is_key_pressed(VK_F4)) {
-			if (gl_separation == 1)
-				gl_separation = 2;
-			else if (gl_separation == 2)
-				gl_separation = 3;
-			else if (gl_separation == 3)
-				gl_separation = 4;
-			else if (gl_separation == 4)
-				gl_separation = 6;
-			else if (gl_separation == 6)
-				gl_separation = 8;
-			else if (gl_separation == 8)
-				gl_separation = 10;
-			else {
-				gl_separation += 5;
-				if (gl_separation > 100)
-					gl_separation = 100;
-			}
+			gl_separation += 5;
+			if (gl_separation > 100)
+				gl_separation = 100;
 			reshade::set_config_value(nullptr, "Geo3D", "StereoSeparation", gl_separation);
 		}
 		if (runtime->is_key_pressed(VK_F5)) {
