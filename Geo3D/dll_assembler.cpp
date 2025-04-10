@@ -80,79 +80,6 @@ uint32_t dumpShader(bool dx9, const wchar_t *type, const void *pData, size_t len
 	return crc;
 }
 
-vector<DWORD> changeSM2(vector<DWORD> code, bool left, int tempReg, float conv, float screenSize, float separation) {
-	vector<DWORD> newCode;
-	bool define = false;
-	for (size_t i = 0; i < code.size(); i++) {
-		if (code[i] == 0xFFFF) {
-			//add r1.x, r0.w, c250.x
-			//mad r0.x, r1.x, c250.y, r0.x
-			//mov oPos, r0
-			newCode.push_back(0x03000002); // add
-			newCode.push_back(0x80010000 + tempReg + 1);
-			newCode.push_back(0x80FF0000 + tempReg + 0);
-			newCode.push_back(0xA00000FA);
-
-
-			newCode.push_back(0x04000004); // mad
-			newCode.push_back(0x80010000 + tempReg + 0);
-			newCode.push_back(0x80000000 + tempReg + 1);
-			newCode.push_back(0xA05500FA);
-			newCode.push_back(0x80000000 + tempReg + 0);
-
-			newCode.push_back(0x02000001); // mov
-			newCode.push_back(0xC00F0000);
-			newCode.push_back(0x80E40000 + tempReg + 0);
-
-			newCode.push_back(code[i]);
-			break;
-		}
-		if (!define) {
-			if (code[i] == 0x200001F) {
-				float finalSep = separation * 0.01f * 6.5f / (2.54f * screenSize * 16 / sqrtf(256 + 81));
-				// first declare
-				newCode.push_back(0x5000051);
-				newCode.push_back(0xA00F00FA);
-				float fConv = -conv;
-				float fSep = left ? -finalSep : finalSep;
-				DWORD *conv = (DWORD *)&fConv;
-				DWORD *sep = (DWORD *)&fSep;
-				newCode.push_back(*conv);
-				newCode.push_back(*sep);
-				newCode.push_back(0);
-				newCode.push_back(0);
-				// complete declare
-				newCode.push_back(code[i++]);
-				newCode.push_back(code[i++]);
-				newCode.push_back(code[i]);
-				define = true;
-			}
-			else {
-				newCode.push_back(code[i]);
-			}
-		}
-		else {
-			int numValues = (code[i] & 0xFF000000) >> 24;
-			newCode.push_back(code[i++]);
-			if ((code[i] & 0xF0000000) == 0xC0000000) {
-				// oPos, replace oPos with r0
-				DWORD oPosReplacement = 0x80000000 + tempReg + (code[i++] & 0xFFFFFFF);
-				newCode.push_back(oPosReplacement);
-			}
-			else {
-				newCode.push_back(code[i++]);
-			}
-			numValues--;
-			while (numValues) {
-				newCode.push_back(code[i++]);
-				numValues--;
-			}
-			i--;
-		}
-	}
-	return newCode;
-}
-
 vector<UINT8> convertSM2(vector<UINT8> asmFile) {
 	string reg((char *)asmFile.data(), asmFile.size());
 	map<size_t, string> outputs;
@@ -3375,6 +3302,8 @@ vector<UINT8> assembler(bool dx9, vector<UINT8> asmFile, vector<UINT8> buffer) {
 			if (hr == S_OK) {
 				ComPtr<IDxcBlob> pBlob;
 				pRes->GetResult(pBlob.GetAddressOf());
+				if (pBlob == nullptr)
+					return ret;
 				UINT8* pASM = (UINT8*)pBlob->GetBufferPointer();
 				if (pASM == nullptr)
 					return ret;
@@ -3393,15 +3322,12 @@ vector<UINT8> assembler(bool dx9, vector<UINT8> asmFile, vector<UINT8> buffer) {
 					dxil_create_func(CLSID_DxcValidator, __uuidof(IDxcValidator), (void**)&validator);
 					ComPtr<IDxcOperationResult> result;
 					hr = validator->Validate(container_blob.Get(), DxcValidatorFlags_InPlaceEdit /* avoid extra copy owned by dxil.dll */, &result);
-					if (hr != S_OK) {
-						vector<UINT8> error;
-						return error;
-					}
+					if (hr != S_OK)
+						return ret;
 				}
 			}
 			else {
-				vector<UINT8> error;
-				return error;
+				return ret;
 			}
 		}
 		return ret;
