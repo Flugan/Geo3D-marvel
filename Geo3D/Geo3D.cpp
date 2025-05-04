@@ -787,7 +787,7 @@ static void onReshadePresent(effect_runtime* runtime)
 		}
 		if (runtime->is_key_pressed(VK_F7)) {
 			gl_Type = !gl_Type;
-			reshade::set_config_value(nullptr, "Geo3D", "Type", gl_Type);
+			reshade::set_config_value(nullptr, "Geo3D", "ShaderType", gl_Type);
 			for (auto it = PSOmap.begin(); it != PSOmap.end(); ++it) {
 				PSO* pso = it->second;
 				pso->convergence = 0;
@@ -812,7 +812,7 @@ static void load_config()
 	reshade::get_config_value(nullptr, "Geo3D", "DumpPipelines", gl_pipelines);
 
 	reshade::get_config_value(nullptr, "Geo3D", "QuickLoad", gl_quickLoad);
-	reshade::get_config_value(nullptr, "Geo3D", "Type", gl_Type);
+	reshade::get_config_value(nullptr, "Geo3D", "ShaderType", gl_Type);
 	reshade::get_config_value(nullptr, "Geo3D", "DepthZ", gl_DepthZ);
 	
 	reshade::get_config_value(nullptr, "Geo3D", "StereoConvergence", gl_conv);
